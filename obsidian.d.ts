@@ -5769,11 +5769,12 @@ export interface SettingDefinitionBase {
      */
     name: string;
     /**
-     * Description text — used for rendering and search.
+     * Description text or fragment. Used for rendering; the textContent of a
+     * fragment is used for search.
      * @public
      * @since 1.13.0
      */
-    desc?: string;
+    desc?: string | DocumentFragment;
     /**
      * Additional search terms.
      * @public
@@ -5963,11 +5964,21 @@ export interface SettingDefinitionPage<K extends string = string> {
      */
     desc?: string | DocumentFragment;
     /**
-     * Settings within this page. Can include groups.
+     * Inline items rendered as a declarative sub-page. Can include groups.
+     * Mutually exclusive with `page`.
      * @public
      * @since 1.13.0
      */
-    items: (SettingDefinition<K> | SettingDefinitionGroup<K>)[];
+    items?: (SettingDefinition<K> | SettingDefinitionGroup<K>)[];
+    /**
+     * Factory for a custom {@link SettingPage} subclass. Use this when the
+     * sub-page is rendered imperatively rather than from a list of
+     * definitions. Mutually exclusive with `items`. The factory is called
+     * each time the page is opened.
+     * @public
+     * @since 1.13.0
+     */
+    page?: () => SettingPage;
 }
 
 /**
@@ -6061,6 +6072,55 @@ export class SettingGroup {
  * @since 1.13.0
  */
 export type SettingGroupItem<K extends string = string> = SettingDefinition<K> | SettingDefinitionPage<K>;
+
+/**
+ * Base class for a sub-page within a {@link SettingTab}. Use with the `page`
+ * factory on {@link SettingDefinitionPage} to render a sub-page imperatively
+ * — useful when the page's content is dynamic or doesn't fit cleanly into a
+ * list of definitions.
+ *
+ * For declarative sub-pages, use the `items` field on
+ * {@link SettingDefinitionPage} instead.
+ * @public
+ * @since 1.13.0
+ */
+export abstract class SettingPage {
+    /**
+     * @public
+     * @since 1.13.0
+     */
+    rootEl: HTMLElement;
+    /**
+     * @public
+     * @since 1.13.0
+     */
+    titlebarEl: HTMLElement;
+    /**
+     * Container for the page's content. Render into this element from
+     * {@link display}.
+     * @public
+     * @since 1.13.0
+     */
+    containerEl: HTMLElement;
+    /**
+     * Title displayed in the page titlebar.
+     * @public
+     * @since 1.13.0
+     */
+    title: string;
+    /**
+     * @public
+     * @since 1.13.0
+     */
+    constructor();
+    /**
+     * Called when the page is opened. Clears and re-renders content
+     * into {@link containerEl}.
+     * @public
+     * @since 1.13.0
+     */
+    abstract display(): void;
+}
 
 /**
  * @public
